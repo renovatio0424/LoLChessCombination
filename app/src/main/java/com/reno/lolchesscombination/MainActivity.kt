@@ -1,12 +1,11 @@
 package com.reno.lolchesscombination
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.reno.lolchesscombination.model.Champion
-import com.reno.lolchesscombination.view.ModalBottomSheet
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.bottom_combination_list.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,10 +22,14 @@ class MainActivity : AppCompatActivity() {
             adapter = CombinationAdapter().apply {
                 addChampions(combinationList)
                 notifyDataSetChanged()
-
             }
         }
 
-        bottom_my_list
+        button_hide.setOnClickListener {
+            if (it.visibility == View.VISIBLE)
+                total_combination_layout.visibility = View.GONE
+            else
+                total_combination_layout.visibility = View.VISIBLE
+        }
     }
 }
