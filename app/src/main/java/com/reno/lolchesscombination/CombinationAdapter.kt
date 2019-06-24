@@ -10,21 +10,29 @@ import com.reno.lolchesscombination.model.Champion
 import com.reno.lolchesscombination.model.CombinationRule
 import kotlinx.android.synthetic.main.item_combination.view.*
 
-class CombinationAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class CombinationAdapter(private val onChampionClick: (champion:Champion) -> Unit) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>(), MainContract.CombinationAdapter.View,
+    MainContract.CombinationAdapter.Model {
+
     private var combinationRuleMap: HashMap<CombinationRule, ArrayList<Champion>> = HashMap()
-    private val selectChampion:HashMap<CombinationRule, ArrayList<Champion>> = HashMap()
-    
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_combination, parent, false);
-        return ViewHolder(view)
+    //TODO : Use RxJava
+    override var selectChampionList: ArrayList<Champion> = ArrayList()
+
+    override fun updateSelectChampionView(champions: Champion) {
+        selectChampionList.add(champions)
+        notifyDataSetChanged()
     }
 
-    override fun getItemCount(): Int {
-        return combinationRuleMap.size
+    override fun getSelectedChampion(position: Int): Champion? {
+        return if (selectChampionList.size >= position) selectChampionList[position] else null
     }
 
-    fun addChampions(champions: ArrayList<Champion>) {
-        for (champion in champions) {
+    override fun getSelectedChampionPosition(selectedChampions: Champion): Int {
+        return selectChampionList.indexOf(selectedChampions)
+    }
+
+    override fun addCombinationList(championList: ArrayList<Champion>) {
+        for (champion in championList) {
             for (combination in champion.combinations) {
                 if (combinationRuleMap.containsKey(combination))
                     combinationRuleMap[combination]?.add(champion)
@@ -35,25 +43,33 @@ class CombinationAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         notifyDataSetChanged()
     }
 
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_combination, parent, false)
+        return CombinationViewHolder(view)
+    }
+
+    override fun getItemCount(): Int {
+        return combinationRuleMap.size
+    }
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder !is ViewHolder)
+        if (holder !is CombinationViewHolder)
             return
 
-        val combinationList = ArrayList(combinationRuleMap.keys)
-        val currentRuleItem = combinationList[position]
+        val currentRuleItem = ArrayList(combinationRuleMap.keys)[position]
 
-        holder.combinationTitle.text = currentRuleItem?.name
+        holder.combinationTitle.text = currentRuleItem.name
         holder.rvChampionList.apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-            adapter = ChampionAdapter().apply {
-                combinationRuleMap[currentRuleItem]?.let { addChampionList(it) }
+            adapter = ChampionAdapter(onChampionClick).apply {
+                combinationRuleMap[currentRuleItem]?.let { addChampions(it) }
             }
         }
     }
 }
 
-class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class CombinationViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     val combinationTitle: TextView = view.combinationTitle
     val rvChampionList: RecyclerView = view.rv_champion_list
 }
